@@ -6,6 +6,7 @@ mod day5;
 mod day6;
 mod day7;
 mod day8;
+mod day9;
 
 use clap::Parser;
 
@@ -52,6 +53,10 @@ fn main() {
         8 => {
             day8::solve_part_one(args.test);
             day8::solve_part_two(args.test);
+        }
+        9 => {
+            day9::solve_part_one(args.test);
+            day9::solve_part_two(args.test);
         }
         _ => {}
     }
