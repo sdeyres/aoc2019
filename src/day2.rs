@@ -1,10 +1,9 @@
-use aoc2019::Intcode;
+use crate::intcode::Intcode;
 
 pub fn solve_part_one(test: bool) {
     let mut program = load_data(test);
+    println!("{:#?}", program);
 
-    program.set(1, 12);
-    program.set(2, 2);
     program.execute();
 
     println!("Part 1: {}", program.get(0));
@@ -35,5 +34,12 @@ pub fn solve_part_two(test: bool) {
 }
 
 fn load_data(test: bool) -> Intcode {
-    Intcode::parse(aoc2019::load_data(2, test).trim_end())
+    let mut program = Intcode::from(aoc2019::load_data(2, test).trim_end());
+
+    if !test {
+        program.set(1, 12);
+        program.set(2, 2);    
+    }
+
+    program
 }

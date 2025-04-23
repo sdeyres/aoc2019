@@ -1,4 +1,4 @@
-use aoc2019::Intcode;
+use crate::intcode::Intcode;
 
 pub fn solve_part_one(test: bool) {
     let mut program = load_data(test);
@@ -23,5 +23,5 @@ pub fn solve_part_two(test: bool) {
 }
 
 fn load_data(test: bool) -> Intcode {
-    Intcode::parse(aoc2019::load_data(5, test).trim())
+    Intcode::from(aoc2019::load_data(5, test).trim())
 }
