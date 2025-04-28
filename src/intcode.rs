@@ -1,6 +1,7 @@
 use std::{
     collections::{HashMap, VecDeque},
     io::Write,
+    ops::{Index, IndexMut},
 };
 
 #[derive(Clone, Debug)]
@@ -20,7 +21,7 @@ impl From<&str> for Intcode {
             .split(",")
             .map(|i| {
                 i.parse::<i64>()
-                    .expect(&format!("Could not parse intcode instruction: {}", i))
+                    .unwrap_or_else(|_| panic!("Could not parse intcode instruction: {}", i))
             })
             .collect();
 
@@ -36,6 +37,29 @@ impl From<&str> for Intcode {
     }
 }
 
+impl Index<usize> for Intcode {
+    type Output = i64;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        if index < self.program.len() {
+            &self.program[index]
+        } else {
+            self.memory.get(&index).unwrap_or(&0)
+        }
+    }
+}
+
+impl IndexMut<usize> for Intcode {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        if index < self.program.len() {
+            &mut self.program[index]
+        } else {
+            self.memory.insert(index, 0);
+            self.memory.get_mut(&index).unwrap()
+        }
+    }
+}
+
 impl Intcode {
     pub fn add_input(&mut self, input: i64) {
         self.input.push_back(input);
@@ -45,30 +69,14 @@ impl Intcode {
         self.output.pop_front()
     }
 
-    pub fn set(&mut self, address: usize, value: i64) {
-        if address < self.program.len() {
-            self.program[address] = value;
-        } else {
-            self.memory.insert(address, value);
-        }
-    }
-
-    pub fn get(&self, address: usize) -> i64 {
-        if address < self.program.len() {
-            self.program[address]
-        } else {
-            *self.memory.get(&address).unwrap_or(&0)
-        }
-    }
-
     pub fn execute(&mut self) {
         self.running = true;
 
         while self.position < self.program.len() {
-            let start = self.position;
-            let end = usize::min(self.position + 5, self.program.len());
-            let instruction = Instruction::from(&self.program[start..end]);
-            println!("{:#?}", instruction);
+            let memory: Vec<i64> = (self.position..self.position + 4)
+                .map(|address| self[address])
+                .collect();
+            let instruction = Instruction::from(&memory[..]);
             instruction.execute(self);
             if matches!(instruction.opcode, Opcode::Out | Opcode::Hcf) {
                 break;
@@ -76,7 +84,7 @@ impl Intcode {
         }
     }
 
-    pub fn halt_and_catch_fire(&mut self) {
+    fn halt_and_catch_fire(&mut self) {
         self.running = false;
     }
 
@@ -106,24 +114,18 @@ struct Instruction {
 }
 
 impl From<&[i64]> for Instruction {
-    fn from(value: &[i64]) -> Self {
-        let digits: Vec<u32> = format!("{instruction:0>5}", instruction = value[0])
+    fn from(memory: &[i64]) -> Self {
+        let digits: Vec<u32> = format!("{instruction:0>5}", instruction = memory[0])
             .chars()
             .map(|d| d.to_digit(10).unwrap())
             .collect();
 
         let opcode = Opcode::from(&digits[3..5]);
 
-        
-        let parameters: Vec<Parameter> = if value.len() > 1 {
-            (0..value.len() - 2)
-            .into_iter()
+        let parameters: Vec<Parameter> = (0..3)
             .rev()
-            .map(|i| Parameter::from((digits[i], value[value.len() - 2 - i])))
-            .collect()
-        } else {
-            vec![]
-        };
+            .map(|i| Parameter::from((digits[i], memory[4 - i - 1])))
+            .collect();
 
         Self { opcode, parameters }
     }
@@ -167,26 +169,26 @@ impl From<&[u32]> for Opcode {
 }
 
 impl Opcode {
-    fn execute(&self, parameters: &Vec<Parameter>, intcode: &mut Intcode) {
+    fn execute(&self, parameters: &[Parameter], intcode: &mut Intcode) {
         match self {
             Self::Add => {
                 let first = parameters[0].value(intcode);
                 let second = parameters[1].value(intcode);
-                let target = parameters[2].value(intcode) as usize;
-                intcode.set(target, first + second);
+                let target = parameters[2].as_address(intcode);
+                intcode[target] = first + second;
                 intcode.position += 4;
             }
             Self::Mul => {
                 let first = parameters[0].value(intcode);
                 let second = parameters[1].value(intcode);
-                let target = parameters[2].value(intcode) as usize;
-                intcode.set(target, first * second);
+                let target = parameters[2].as_address(intcode);
+                intcode[target] = first * second;
                 intcode.position += 4;
             }
             Self::In => {
                 let first = intcode.next_input();
-                let target = parameters[0].value(intcode) as usize;
-                intcode.set(target, first);
+                let target = parameters[0].as_address(intcode);
+                intcode[target] = first;
                 intcode.position += 2;
             }
             Self::Out => {
@@ -216,15 +218,15 @@ impl Opcode {
             Self::Lt => {
                 let first = parameters[0].value(intcode);
                 let second = parameters[1].value(intcode);
-                let target = parameters[2].value(intcode) as usize;
-                intcode.set(target, if first < second { 1 } else { 0 });
+                let target = parameters[2].as_address(intcode);
+                intcode[target] = if first < second { 1 } else { 0 };
                 intcode.position += 4;
             }
             Self::Eq => {
                 let first = parameters[0].value(intcode);
                 let second = parameters[1].value(intcode);
-                let target = parameters[2].value(intcode) as usize;
-                intcode.set(target, if first == second { 1 } else { 0 });
+                let target = parameters[2].as_address(intcode);
+                intcode[target] = if first == second { 1 } else { 0 };
                 intcode.position += 4;
             }
             Self::Rel => {
@@ -259,9 +261,17 @@ impl From<(u32, i64)> for Parameter {
 impl Parameter {
     fn value(&self, intcode: &Intcode) -> i64 {
         match self {
-            Self::Position(address) => intcode.get(*address),
+            Self::Position(address) => intcode[*address],
             Self::Immediate(value) => *value,
-            Self::Relative(offset) => intcode.get((intcode.relative_base + offset) as usize),
+            Self::Relative(offset) => intcode[(intcode.relative_base + offset) as usize],
+        }
+    }
+
+    fn as_address(&self, intcode: &Intcode) -> usize {
+        match self {
+            Self::Position(address) => *address,
+            Self::Immediate(value) => *value as usize,
+            Self::Relative(offset) => (intcode.relative_base + offset) as usize,
         }
     }
 }

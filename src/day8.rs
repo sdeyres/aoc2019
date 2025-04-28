@@ -15,8 +15,8 @@ pub fn solve_part_one(test: bool) {
         }
     }
 
-    let one_count = count(1, &image.layer(layer_number));
-    let two_count = count(2, &image.layer(layer_number));
+    let one_count = count(1, image.layer(layer_number));
+    let two_count = count(2, image.layer(layer_number));
     println!("Part 1: {}", one_count * two_count);
 }
 
@@ -62,7 +62,7 @@ impl Image {
     }
 }
 
-fn count(value: u32, layer: &Vec<u32>) -> usize {
+fn count(value: u32, layer: &[u32]) -> usize {
     layer.iter().filter(|pixel| **pixel == value).count()
 }
 
