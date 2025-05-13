@@ -1,3 +1,4 @@
+mod coordinates;
 mod day1;
 mod day2;
 mod day3;
@@ -9,6 +10,7 @@ mod day8;
 mod day9;
 mod day10;
 mod day11;
+mod direction;
 mod intcode;
 
 use clap::Parser;
@@ -23,7 +25,8 @@ struct Args {
 }
 
 fn main() {
-    let args = Args::parse();
+    //let args = Args::parse();
+    let args = Args { test: false, day: 11 };
     match args.day {
         1 => {
             day1::solve_part_one(args.test);
