@@ -11,6 +11,7 @@ mod day9;
 mod day10;
 mod day11;
 mod day12;
+mod day13;
 mod direction;
 mod intcode;
 mod vec3d;
@@ -76,6 +77,10 @@ fn main() {
         12 => {
             day12::solve_part_one(args.test);
             day12::solve_part_two(args.test);
+        }
+        13 => {
+            day13::solve_part_one(args.test);
+            day13::solve_part_two(args.test);
         }
         _ => {}
     }

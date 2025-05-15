@@ -1,4 +1,4 @@
-use std::{f64::consts::PI, ops};
+use std::{f64::consts::PI, fmt, ops};
 
 use num::integer;
 
@@ -6,6 +6,12 @@ use num::integer;
 pub struct Coordinates {
     x: i32,
     y: i32,
+}
+
+impl fmt::Display for Coordinates {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"({}, {})", self.x, self.y)
+    }
 }
 
 impl Coordinates {
