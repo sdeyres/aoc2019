@@ -10,8 +10,10 @@ mod day8;
 mod day9;
 mod day10;
 mod day11;
+mod day12;
 mod direction;
 mod intcode;
+mod vec3d;
 
 use clap::Parser;
 
@@ -25,8 +27,7 @@ struct Args {
 }
 
 fn main() {
-    //let args = Args::parse();
-    let args = Args { test: false, day: 11 };
+    let args = Args::parse();
     match args.day {
         1 => {
             day1::solve_part_one(args.test);
@@ -71,6 +72,10 @@ fn main() {
         11 => {
             day11::solve_part_one(args.test);
             day11::solve_part_two(args.test);
+        }
+        12 => {
+            day12::solve_part_one(args.test);
+            day12::solve_part_two(args.test);
         }
         _ => {}
     }

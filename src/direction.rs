@@ -1,7 +1,8 @@
 use crate::coordinates::Coordinates;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub enum Direction {
+    #[default]
     Up,
     Right,
     Down,
@@ -36,11 +37,5 @@ impl Direction {
         };
 
         coordinates + &velocity
-    }
-}
-
-impl Default for Direction {
-    fn default() -> Self {
-        Direction::Up
     }
 }

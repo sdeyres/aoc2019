@@ -2,7 +2,7 @@ use std::{f64::consts::PI, ops};
 
 use num::integer;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub struct Coordinates {
     x: i32,
     y: i32,
@@ -85,11 +85,5 @@ impl ops::Sub<&Coordinates> for &Coordinates {
             x: self.x - rhs.x,
             y: self.y - rhs.y,
         }
-    }
-}
-
-impl Default for Coordinates {
-    fn default() -> Self {
-        Self::new(0, 0)
     }
 }

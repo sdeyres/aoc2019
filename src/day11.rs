@@ -92,7 +92,7 @@ impl Display for Hull {
         for y in (y_min..=y_max).rev() {
             for x in x_min..=x_max {
                 let color = self.get(&Coordinates::new(x, y));
-                write!(f, "{}", if color == 1 { '#' } else { '.' })?;
+                write!(f, "{}", if color == 1 { '#' } else { ' ' })?;
             }
             writeln!(f)?;
         }
